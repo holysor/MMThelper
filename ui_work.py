@@ -378,7 +378,7 @@ class CreateDataUi:
         return text_info,sucess
 
     def clear(self):
-        flag = messagebox.askokcancel('提示','清楚记录？')
+        flag = messagebox.askokcancel('提示','清楚信息记录？')
         if flag:
             self.text.config(state=NORMAL)
             self.text.delete(1.0,END)
