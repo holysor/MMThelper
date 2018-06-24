@@ -14,7 +14,6 @@ class Register:
         '''随机生成号码'''
         # 第二位数字
         second = [3, 4, 5, 7, 8][random.randint(0, 4)]
-
         # 第三位数字
         third = {
             3: random.randint(0, 9),
@@ -57,7 +56,7 @@ class Register:
         m_password = m.hexdigest()
         return m_password
 
-    def login_session(self,mobile,pwd):
+    def login_session(self,mobile,pwd,wm_text=None):
         '''企业用户登录账号，返回session，账户信息'''
         url = self.host+ '/gateway/login/checkLogin'
 
@@ -73,12 +72,21 @@ class Register:
         res = session.post(url,headers=headers,data=data)
         if res.json()['success']==False:
             print(res.json()['errMsg'])
+            if wm_text:
+                self.wm_insert_text(wm_text,'\n'+str(res.json()['errMsg'])+'\n\n')
             assert False
         return session,res.json()
 
+    def wm_insert_text(self,wm_text,value):
+        if wm_text:
+            wm_text.config(state='normal')
+            wm_text.insert('end', value)
+            wm_text.config(state='disabled')
+            wm_text.see('end')
+
     def get_roleid(self,session):
         '''获取角色ID  api'''
-        url = host + '/mmt/role/list?limit=100&offset=0'
+        url = self.host + '/mmt/role/list?limit=100&offset=0'
         res = session.get(url)
         data = res.json()
         # total = len(data['module']['list'])
@@ -188,7 +196,7 @@ class Register:
 
 
 
-    def add_allroles_employees(self,mobile,pwd,ey_pwd):
+    def add_allroles_employees(self,mobile,pwd,ey_pwd,wm_text=None):
         '''
             添加所有对应角色的员工[合伙人、店长、店员、工厂管理员、商品管理员]
             超级管理员账号：mobile
@@ -196,7 +204,7 @@ class Register:
             员工设定密码：ey_pwd
         '''
         password = pwd
-        login = self.login_session(mobile,password)
+        login = self.login_session(mobile,password,wm_text)
         session = login[0]
         compid = login[1]['module']['compId']
         roles = self.get_roleid(session)
@@ -205,15 +213,19 @@ class Register:
         for role in roles:
             roleid = role['roleId']
             rolename = role['roleName']
-            phone = fake.phone_number()
+            phone = self.random_mobile()
             try:
                 self.add_employee_api(session,compid,phone,storeid,roleid,rolename)
                 password = self.get_forget_password(phone)
-                employees_session=self.login_session(phone,password)[0]
+                employees_session=self.login_session(phone,password,wm_text)[0]
                 self.updata_password(employees_session, phone,ey_pwd)
                 employees[phone]=[rolename,ey_pwd]
+                if wm_text:
+                    self.wm_insert_text(wm_text,rolename+': '+''+phone+'('+ey_pwd+')\n')
             except:
                 print('添加员工 %s:%s 失败'%(str(phone),rolename))
+                if wm_text:
+                    self.wm_insert_text(wm_text,'添加员工-%s:%s失败,请确认环境是否正确\n\n'%(rolename,str(phone)))
         return employees
 
     def to_register(self,mobile,pwd,id):
@@ -261,15 +273,17 @@ if __name__=='__main__':
     host = 'https://www.yl9158.com'
     # host = 'http://sit.yl9158.com'
     r = Register(host)
-    # fake = Factory.create('zh_CN')
-    # phone = fake.phone_number()
+    from faker import Factory
+    fake = Factory.create('zh_CN')
+
+    phone = fake.phone_number()
     password = '111111'
     # r.to_register(phone,password,1)#注册新账号
     # print(get_forget_password('13396573421'))#忘记密码方式获取随机生成密码
     # print(add_allroles_employees(to_register(phone,password,1)[0],'111111','111111'))#创建员工
-    # print(add_allroles_employees(to_register(phone,password,1)[0],'111111','111111'))#创建员工
-    # print(add_allroles_employees(to_register(phone,password,2)[0],'111111','111111'))#创建员工
-    # print(add_allroles_employees(to_register(phone,password,3)[0],'111111','111111'))#创建员工
+    # print(r.add_allroles_employees(r.to_register(phone,password,1)[0],'111111','111111'))#创建员工
+    # print(r.add_allroles_employees(r.to_register(phone,password,2)[0],'111111','111111'))#创建员工
+    print(r.add_allroles_employees(r.to_register(phone,password,3)[0],'111111','111111'))#创建员工
     # print(add_allroles_employees('14567285398','111111','111111'))#创建员工
 
     # updata_user_password('18982402602','111111')
