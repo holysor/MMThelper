@@ -178,22 +178,23 @@ class CreateDataUi:
         user_label = Label(frame_user,text='企业老板账号:')
         user_label.pack(side=LEFT,fill=X)
         self.user = StringVar()
+        self.user_error_msg = StringVar()
+        self.password = StringVar()
+        self.password_error_msg = StringVar()
+        self.employee_error_msg = StringVar()
+        self.password_error = Message(self.popup, textvariable=self.password_error_msg, width=150)
+        self.employee_error = Message(self.popup, textvariable=self.employee_error_msg, width=150)
+        self.user_error = Message(self.popup, textvariable=self.user_error_msg, width=100)
+
         user_entry = Entry(frame_user,textvariable=self.user,text=self.user,validate='focusout',validatecommand=lambda:self.validateText('user'))
         user_entry.pack(side=LEFT,ipady=5)
         self.user.set(self.user_mobile)
-        self.user_error_msg = StringVar()
-        self.user_error = Message(self.popup,textvariable=self.user_error_msg,width=100)
         self.user_error.pack(side=TOP)
-
         frame_password = Frame(self.popup)
         frame_password.pack(side=TOP)
         password_label = Label(frame_password, text='企业老板密码:')
         password_label.pack(side=LEFT, fill=X)
-        self.password = StringVar()
-        self.password_error_msg = StringVar()
-        self.employee_error_msg = StringVar()
-        self.password_error = Message(self.popup, textvariable=self.password_error_msg,width=150)
-        self.employee_error = Message(self.popup, textvariable=self.employee_error_msg,width=150)
+
 
         password_entry = Entry(frame_password, textvariable=self.password,validate='focusout', validatecommand=lambda :self.validateText('pwd'))
         password_entry.pack(side=LEFT, ipady=5)
@@ -335,14 +336,11 @@ class CreateDataUi:
             self.text.config(state=NORMAL)
             results = register.get_msg_code()
             sendtime = str(results[2])[:4] + '.' +str(results[2])[4:6]+'.'+str(results[2])[6:8]+' '+str(results[2])[8:10]+':'+str(results[2])[10:12]+':'+str(results[2])[12:]
-            self.text.insert(END,'手机号：%s\n'%results[3] )
+            self.text.insert(END,'\n\n手机号：%s\n'%results[3] )
             self.text.insert(END,'发送时间：%s\n'%sendtime )
             self.text.insert(END,'验证码：%s\n'%results[0] )
             self.text.insert(END,'短信密码：%s\n\n'%results[1] )
             self.text.see(END)
-            index = float(self.text.index(INSERT)) - 1.0
-            self.text.tag_add('code',index-4,index)
-            self.text.tag_config('code', foreground='blue')
             self.text.config(state=DISABLED)
         except:
             self.text.insert(END,'\n查看验证码失败!\n\n' )
@@ -353,11 +351,12 @@ class CreateDataUi:
             self.text.config(state=DISABLED)
 
     def open_with_web(self):
-        self.host = self.env.get()
-        webbrowser.open(self.host)
+        url = self.env.get() + '/enterprise/mmt/index.htm#/account'
+        webbrowser.open(url)
 
     def get_account(self,type):
         '''创建账号，返回账号信息'''
+        self.host = self.env_entry.get()
         register = Register(self.host)
         phone = register.random_mobile()
         password = '111111'
@@ -368,17 +367,18 @@ class CreateDataUi:
         }
         sucess = True
         try:
-            work_thread = Thread(register.to_register,phone,password,type)
+            work_thread = Thread(register.to_register,phone,password,type,self.text)
             work_thread.setDaemon(True)
             work_thread.start()
-            text_info = '注册成功!\n业务类型:%s\n账号:%s,密码:%s\n\n'%(yewu[type],phone,password)
+            text_info = '\n开始注册业务类型:%s\n'%(yewu[type])
+
         except:
-            text_info = '%s账号注册失败!\n\r'%phone
+            text_info = '\n%s账号注册失败!\n\r'%phone
             sucess =False
         return text_info,sucess
 
     def clear(self):
-        flag = messagebox.askokcancel('提示','清楚信息记录？')
+        flag = messagebox.askokcancel('提示','清除信息记录？')
         if flag:
             self.text.config(state=NORMAL)
             self.text.delete(1.0,END)
@@ -402,7 +402,6 @@ class CreateDataUi:
         size = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
         self.root.geometry(size)
         self.root.deiconify()
-
 
 if __name__=='__main__':
     run = CreateDataUi()

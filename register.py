@@ -228,7 +228,7 @@ class Register:
                     self.wm_insert_text(wm_text,'添加员工-%s:%s失败,请确认环境是否正确\n\n'%(rolename,str(phone)))
         return employees
 
-    def to_register(self,mobile,pwd,id):
+    def to_register(self,mobile,pwd,id,wm_text=None):
         '''注册账号
         账号：mobile
         密码：pwd
@@ -260,8 +260,25 @@ class Register:
             print('注册成功！')
             print('新账号：',mobile)
             print('初设密码：',pwd)
+            if wm_text:
+                # self.wm_insert_text(wm_text, '\n' + str(res.json()['errMsg']) + '\n\n')
+                self.wm_insert_text(wm_text,'\n'+'注册成功！\n')
+                self.wm_insert_text(wm_text,'\n%s新账号:%s\n'%(business[id],mobile))
+                self.wm_insert_text(wm_text,'\n初始密码:%s\n\n'%pwd)
         else:
             print('注册失败！')
+            if wm_text:
+                self.wm_insert_text(wm_text,'\n注册失败！\n')
+                self.wm_insert_text(wm_text, '\n%s新账号:%s\n\n' % (business[id], mobile))
+        try:
+            self.login_session(mobile,pwd,wm_text)
+            print('\n登录验证正常！\n')
+            if wm_text:
+                self.wm_insert_text(wm_text, '\n账号登录验证正常！\n\n')
+        except:
+            print('\n登录验证失败！\n')
+            if wm_text:
+                self.wm_insert_text(wm_text, '\n账号登录失败，请重新注册！\n\n')
         return mobile,pwd
 
 def updata_user_password(self,mobile,pwd):
