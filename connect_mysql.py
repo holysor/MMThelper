@@ -19,8 +19,6 @@ class OperationSQL:
         self.close()
         return results
 
-
-
     def close(self):
         '''关闭数据库'''
         self.cursor.close()

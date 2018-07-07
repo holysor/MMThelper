@@ -99,7 +99,7 @@ class Register:
         data = res.json()
         return data['module']['list']
 
-    def add_employee_api(self,session,compid,mobile,storeid,roleid,rolename):
+    def add_employee_api(self,session,compid,mobile,storeid,roleid,rolename,username=''):
         '''添加员工api'''
         url = self.host + '/gateway/user/baseinfoPersonCompanyOrgWriteRpcService/addAppPerson/b1fa22023c344c5599b01c7650330200'
         data = {
@@ -112,7 +112,7 @@ class Register:
             'avatar':'',
             'email':'',
             'sex':'',
-            'compTitle':'',
+            'compTitle':username,
             'address':'',
             'idcard':'',
             'birthday':'',
@@ -227,6 +227,20 @@ class Register:
                 if wm_text:
                     self.wm_insert_text(wm_text,'添加员工-%s:%s失败,请确认环境是否正确\n\n'%(rolename,str(phone)))
         return employees
+    def get_business_category(self):
+        '''获取经营类目'''
+        url = self.host+'/gateway/item/sysGoodsCategoryRpcService/findFirstLevelGoodsCategoryList/ddfbc6fad4cb40be8fb95a97a972a1dc'
+        res = requests.get(url)
+        return res.json()
+
+    def delete_user(self,mobile,password):
+        '''删除账号'''
+        session = self.login_session(mobile,password)[0]
+        url = self.host+'/user/baseinfoPersonCompanyOrgWriteRpcService/delelePerson'
+        data = {
+            '':''
+        }
+        res = requests.post(url,data)
 
     def to_register(self,mobile,pwd,id,wm_text=None):
         '''注册账号
@@ -251,7 +265,7 @@ class Register:
             'personPwd':self.get_password_md5(pwd),
             'ctId': id,
             'ctName': business[id],
-            'businessCategory': '1,2,3,4,5',
+            'businessCategory': ','.join([str(i['gcId']) for i in self.get_business_category()['module']]),
             'channel': 'website',
             'requestCode': ''
         }
@@ -300,13 +314,16 @@ if __name__=='__main__':
     # print(add_allroles_employees(to_register(phone,password,1)[0],'111111','111111'))#创建员工
     # print(r.add_allroles_employees(r.to_register(phone,password,1)[0],'111111','111111'))#创建员工
     # print(r.add_allroles_employees(r.to_register(phone,password,2)[0],'111111','111111'))#创建员工
-    print(r.add_allroles_employees(r.to_register(phone,password,3)[0],'111111','111111'))#创建员工
+    # print(r.add_allroles_employees(r.to_register(phone,password,3)[0],'111111','111111'))#创建员工
     # print(add_allroles_employees('14567285398','111111','111111'))#创建员工
 
     # updata_user_password('18982402602','111111')
-    r.send_msg('15020044445')
+    # r.send_msg('15020044445')
     # r.login_session('13630941998','111111')
     print('手机号：',r.get_msg_code()[3])
     print('发送时间：',r.get_msg_code()[2])
     print('验证码：',r.get_msg_code()[0])
     print('短信密码：',r.get_msg_code()[1])
+    list = [str(i['gcId']) for i in r.get_business_category()['module']]
+    print(list)
+    print(','.join(list))

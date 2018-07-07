@@ -2,9 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import font
 from register import Register
-
-# from faker import Factory
-import time
+from ui_login import login
 import webbrowser
 import threading
 import re
@@ -41,16 +39,14 @@ class CreateDataUi:
         self.root = Tk()
         self.root.withdraw()
         self.root.attributes('-alpha', 0.9)
-
         self.root.title("B+ 买卖通小助手")
         self.root.resizable(0,0)
         self.set_window_center(480,580)
         self.set_window()
         self.root.protocol("WM_DELETE_WINDOW",self.close_window)
         self.root.bind('<Escape>', lambda e: self.root.destroy())
+        # self.setup_login()
         self.root.mainloop()
-
-
 
     def set_window(self):
         '''设置控件'''
@@ -121,7 +117,7 @@ class CreateDataUi:
         self.button_employee.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
         self.button_2.pack(side=LEFT,anchor=CENTER,fill=X,expand=YES)
         self.claer_button.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
-        self.delete_button.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
+        # self.delete_button.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
 
 
     def set_text(self,types=1):
@@ -156,7 +152,7 @@ class CreateDataUi:
         '''创建员工'''
 
         self.popup = Toplevel(self.root)
-        self.popup.wm_transient(self.root)
+        # self.popup.wm_transient(self.root)
         self.popup_width = 300
         self.popup_height = 300
         self.popup.resizable(0,0)
@@ -171,7 +167,7 @@ class CreateDataUi:
         self.popup.geometry('%sx%s+%s+%s'%(self.popup_width,self.popup_height,set_x,set_y))
         self.popup.wm_attributes("-topmost", 1)
         self.popup.title('添加员工')
-        msg = Message(self.popup,text='\n  *为企业超级管理员添加所有角色的员工*\n\n',width = self.popup_width-20)
+        msg = Message(self.popup,text='\n  **为企业超级管理员添加所有角色的员工\n\n',width = self.popup_width-20)
         msg.pack(side=TOP,fill=X)
         frame_user = Frame(self.popup)
         frame_user.pack(side=TOP)
@@ -261,6 +257,7 @@ class CreateDataUi:
                 self.employee_error_msg.set('密码长度应在6~18之间')
                 self.employee_error.configure(foreground='red')
                 flag=False
+
         return flag
 
     def valida_all_input(self):
@@ -402,6 +399,9 @@ class CreateDataUi:
         size = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
         self.root.geometry(size)
         self.root.deiconify()
+
+    def setup_login(self):
+        login(self.root)
 
 if __name__=='__main__':
     run = CreateDataUi()
