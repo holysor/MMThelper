@@ -1,1 +1,1 @@
-pyinstaller -F -n 买卖通小助手 -w -i static\icon\mmt.ico ui_work.py
+pyinstaller -F -n 买卖通小助手 -w -i static\icon\mmt.ico ui_login.py

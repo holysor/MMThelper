@@ -2,12 +2,9 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import font
 from register import Register
-from ui_login import login
 import webbrowser
 import threading
-import re
-from multiprocessing.pool import ThreadPool
-
+from RedPacket import run
 
 class Thread(threading.Thread):
     def __init__(self,target,*args):
@@ -45,11 +42,11 @@ class CreateDataUi:
         self.set_window()
         self.root.protocol("WM_DELETE_WINDOW",self.close_window)
         self.root.bind('<Escape>', lambda e: self.root.destroy())
-        # self.setup_login()
         self.root.mainloop()
 
     def set_window(self):
         '''设置控件'''
+
         ft1 = font.Font(self.root,family='楷体', size=16, weight=font.BOLD)
         ft2 = font.Font(self.root,family='Arial', size=13,weight=font.BOLD)
         ft3 = font.Font(self.root, size=13)
@@ -95,7 +92,7 @@ class CreateDataUi:
         frame_list.pack(side=TOP,fill=BOTH)
         scrollbar = Scrollbar(frame_list)
         scrollbar.pack(side=RIGHT,fill=Y)
-        self.text = Text(frame_list,height=30)
+        self.text = Text(frame_list,height=20)
         self.text.pack(side=RIGHT,fill=BOTH)
         scrollbar.config(command=self.text.yview)
         self.text.config(yscrollcommand=scrollbar.set)
@@ -108,16 +105,21 @@ class CreateDataUi:
         self.button_2 = Button(frame_button,text='查看验证码',command=self.get_msgcode)
         self.claer_button = Button(frame_button,text='清空信息',command=self.clear)
         self.delete_button = Button(frame_button,text='删除账号',command=self.delete_account)
+        self.redpacket_button = Button(frame_button,text='红包邀请',command=self.redpacket)
+
         self.button_1.configure(width=10, height=2)
         self.button_2.configure(width=10, height=2)
         self.button_employee.configure(width=10, height=2)
         self.claer_button.configure(width=10,height=2)
         self.delete_button.configure(width=10,height=2)
+        self.redpacket_button.configure(width=10,height=2)
+
         self.button_1.pack(side=LEFT,anchor=CENTER,fill=X,expand=YES)
         self.button_employee.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
         self.button_2.pack(side=LEFT,anchor=CENTER,fill=X,expand=YES)
         self.claer_button.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
         # self.delete_button.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
+        self.redpacket_button.pack(side=LEFT, anchor=CENTER, fill=X, expand=YES)
 
 
     def set_text(self,types=1):
@@ -148,6 +150,97 @@ class CreateDataUi:
         select_value = self.var.get()
         self.set_text(select_value)
 
+    def redpacket(self):
+        '''红包邀请'''
+        self.redpacket_popup = Toplevel(self.root)
+        # self.redpacket_popup.wm_transient(self.root)
+        self.redpacket_popup_width = 300
+        self.redpacket_popup_height = 300
+        self.redpacket_popup.resizable(0,0)
+        self.redpacket_popup.attributes('-alpha', 0.9)
+
+        root_x = self.root.winfo_x()
+        root_y = self.root.winfo_y()
+        root_width = self.root.winfo_width()
+        root_height = self.root.winfo_height()
+        set_x = int(int(root_x)+(root_width/2)-self.redpacket_popup_width/2)
+        set_y = int(int(root_y)+(root_height/2)-self.redpacket_popup_height/2)
+        self.redpacket_popup.geometry('%sx%s+%s+%s'%(self.redpacket_popup_width,self.redpacket_popup_height,set_x,set_y))
+        self.redpacket_popup.wm_attributes("-topmost", 1)
+        self.redpacket_popup.title('红包邀请')
+        msg = Message(self.redpacket_popup,text='\n  *邀请人生成红包*\n\n',width = self.redpacket_popup_width-20)
+        msg.pack(side=TOP,fill=X)
+        frame_user = Frame(self.redpacket_popup)
+        frame_user.pack(side=TOP)
+        user_label = Label(frame_user,text='邀请人账号:')
+        user_label.pack(side=LEFT,fill=X)
+        self.user = StringVar()
+        self.user_error_msg = StringVar()
+        self.password = StringVar()
+        self.password_error_msg = StringVar()
+        self.employee_error_msg = StringVar()
+        self.redpacket_error_msg =StringVar()
+        self.password_error = Message(self.redpacket_popup, textvariable=self.password_error_msg, width=150)
+        self.redpacket_error = Message(self.redpacket_popup, textvariable=self.redpacket_error_msg, width=150)
+        self.user_error = Message(self.redpacket_popup, textvariable=self.user_error_msg, width=100)
+
+        user_entry = Entry(frame_user,textvariable=self.user,text=self.user,validate='focusout',validatecommand=lambda:self.validateText('user'))
+        user_entry.pack(side=LEFT,ipady=5)
+        self.user.set(self.user_mobile)
+        self.user_error.pack(side=TOP)
+        frame_password = Frame(self.redpacket_popup)
+        frame_password.pack(side=TOP)
+        password_label = Label(frame_password, text='邀请人密码:')
+        password_label.pack(side=LEFT, fill=X)
+
+        password_entry = Entry(frame_password, textvariable=self.password,validate='focusout', validatecommand=lambda :self.validateText('pwd'))
+        password_entry.pack(side=LEFT, ipady=5)
+        self.password.set(self.user_pwd)
+        #企业密码错误信息
+        self.password_error.pack(side=TOP)
+        frame_employee = Frame(self.redpacket_popup)
+        frame_employee.pack(side=TOP)
+        employee_label = Label(frame_employee, text='邀请红包数')
+        employee_label.pack(side=LEFT,expand=YES)
+        self.redpacket_num = StringVar()
+        employee_entry = Entry(frame_employee, textvariable=self.redpacket_num,text=self.redpacket_num,validate='focusout', validatecommand=lambda :self.validateText('red_number'))
+        employee_entry.pack(side=LEFT, ipady=5)
+        self.redpacket_num.set(1)
+        self.redpacket_error.pack()
+
+        frame_button = Frame(self.redpacket_popup)
+        frame_button.pack(side=TOP,pady=10)
+        sure_button = Button(frame_button,text='确认',command=self.run_redpacket)
+        sure_button.configure(width=10,height=2)
+        sure_button.pack(side=LEFT)
+        clear_button = Button(frame_button, text='清空', command=self.clear_all_data)
+        clear_button.configure(width=10, height=2)
+        clear_button.pack(side=LEFT)
+        self.redpacket_popup.grab_set()
+
+    def run_redpacket(self):
+        '''执行邀请红包'''
+        if not self.validate_redpacket_input():
+            self.redpacket_popup.update()
+            return
+        user = self.user.get()
+        password = self.password.get()
+        redpacket_num = self.redpacket_num.get()
+        self.user_mobile = self.user.get()
+        self.user_pwd = self.password.get()
+        self.insert_text('\n开始红包邀请，红包数:%s，等待完成...\n\n'%(redpacket_num))
+        try:
+            work_thread = threading.Thread(target=run.run_redpacket,args=(user,password,redpacket_num,self.text,))
+            work_thread.setDaemon(True)
+            work_thread.start()
+            check_work = Thread(self.check_redpacket_finish,work_thread)
+            check_work.setDaemon(True)
+            check_work.start()
+        except:
+            self.insert_text('邀请红包异常！\n')
+        finally:
+            self.redpacket_popup.destroy()
+
     def create_employee(self):
         '''创建员工'''
 
@@ -167,7 +260,7 @@ class CreateDataUi:
         self.popup.geometry('%sx%s+%s+%s'%(self.popup_width,self.popup_height,set_x,set_y))
         self.popup.wm_attributes("-topmost", 1)
         self.popup.title('添加员工')
-        msg = Message(self.popup,text='\n  **为企业超级管理员添加所有角色的员工\n\n',width = self.popup_width-20)
+        msg = Message(self.popup,text='\n  *企业超级管理员添加所有角色的员工*\n\n',width = self.popup_width-20)
         msg.pack(side=TOP,fill=X)
         frame_user = Frame(self.popup)
         frame_user.pack(side=TOP)
@@ -258,6 +351,24 @@ class CreateDataUi:
                 self.employee_error.configure(foreground='red')
                 flag=False
 
+        elif v_type=='red_number':
+            value = self.redpacket_num.get().strip()
+            if value.isdigit():
+                if int(value)>0:
+                    self.redpacket_error_msg.set('')
+                    self.redpacket_error.configure(foreground='green')
+                    flag =True
+                else:
+                    print('邀请红包数必须大于0')
+                    self.redpacket_error_msg.set('邀请红包数必须大于0')
+                    self.redpacket_error.configure(foreground='red')
+                    flag = False
+            else:
+                print('请输入正整数')
+                self.redpacket_error_msg.set('请输入正整数')
+                self.redpacket_error.configure(foreground='red')
+                flag=False
+
         return flag
 
     def valida_all_input(self):
@@ -265,17 +376,31 @@ class CreateDataUi:
         a= self.validateText('user')
         b= self.validateText('pwd')
         c=self.validateText('e_pwd')
-        print(a,b,c)
         if a and b and c:
             return True
         else:
             return False
-
+    def validate_redpacket_input(self):
+        '''检查红包邀请输入框'''
+        a= self.validateText('user')
+        b= self.validateText('pwd')
+        c=self.validateText('red_number')
+        if a and b and c:
+            return True
+        else:
+            return False
     def clear_all_data(self):
         '''清空输入框所有数据'''
         self.user.set('')
         self.password.set('')
-        self.employee_pwd.set('')
+        try:
+            self.employee_pwd.set('')
+        except:
+            pass
+        try:
+            self.redpacket_num.set('')
+        except:
+            pass
 
     def popup_work(self):
         '''添加员工'''
@@ -303,6 +428,12 @@ class CreateDataUi:
         while work.is_alive():
             self.button_employee['state'] = DISABLED
         self.button_employee['state'] = NORMAL
+
+    def check_redpacket_finish(self,work):
+        while work.is_alive():
+            self.redpacket_button['state'] = DISABLED
+        self.insert_text('\n红包邀请完成!\n')
+        self.redpacket_button['state']= NORMAL
 
     def reset(self):
         '''重置'''
@@ -401,7 +532,6 @@ class CreateDataUi:
         self.root.deiconify()
 
     def setup_login(self):
-        login(self.root)
-
+        pass
 if __name__=='__main__':
     run = CreateDataUi()
